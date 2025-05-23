@@ -1,0 +1,85 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import * as Location from 'expo-location';
+
+function HomeScreen() {
+  const [city, setCity] = useState('Loading...');
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setCity('Permission denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      let reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
+      if (reverseGeocode.length > 0) {
+        setCity(reverseGeocode[0].city);
+      }
+    })();
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Current City: {city}</Text>
+    </View>
+  );
+}
+
+function ProfileScreen() {
+  const [name, setName] = useState('User');
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.label}>Edit Name:</Text>
+      <TextInput
+        style={styles.input}
+        value={name}
+        onChangeText={text => setName(text)}
+      />
+      <Text style={styles.text}>Your name is: {name}</Text>
+    </View>
+  );
+}
+
+function SettingsScreen() {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text}>Settings Page (Coming Soon)</Text>
+    </View>
+  );
+}
+
+const Tab = createBottomTabNavigator();
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator screenOptions={({ route }) => ({
+        headerTitle: route.name
+      })}>
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Profile" component={ProfileScreen} />
+        <Tab.Screen name="Settings" component={SettingsScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  text: { fontSize: 18, textAlign: 'center' },
+  label: { fontSize: 18, marginBottom: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    width: '100%',
+    padding: 10,
+    marginBottom: 20,
+    borderRadius: 5
+  }
+});
